@@ -5,7 +5,7 @@
 /**
 Tests the BMM150 driver against a simulated chip. No hardware is needed.
 
-Run on the host with:
+It runs on the host with:
 ```
 toit pkg install
 toit bmm150-mock-test.toit

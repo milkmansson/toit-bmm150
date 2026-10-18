@@ -24,9 +24,9 @@ This class holds two corrections:
 The two corrections come from the min/max method, which is a common technique
   and not something from the datasheet or from Bosch. See $MagCalibrator.
 
-Pass a calibration to the driver with the `--calibration` argument of the
-  constructor, or set it later with `sensor.calibration = ...`, and the driver
-  applies it in `read-mag-compensated`.
+A calibration reaches the driver through the `--calibration` argument of the
+  constructor, or later through `sensor.calibration = ...`. The driver applies
+  it in `read-mag-compensated`.
 
 The calibration belongs to the whole assembly, not to the chip alone. Moving
   the sensor, changing the battery or adding a wire can change it. A
@@ -102,7 +102,8 @@ class MagCalibration:
   /**
   Returns Toit source that rebuilds this calibration.
 
-  Print it once after calibrating and paste it into your own code.
+  Printing it once after calibrating gives a line to paste into the application
+  code.
   */
   to-source -> string:
     return "MagCalibration"
@@ -117,7 +118,7 @@ class MagCalibration:
 /**
 Collects readings while the board is turned, and works out a $MagCalibration.
 
-Feed it readings with $add while you rotate the board through every
+Readings go in through $add while the board rotates through every
   orientation. It remembers the smallest and largest value on each axis. For
   each axis, half the sum of the two is the offset. The scale makes the three
   half-ranges equal, using their average as the target.
@@ -170,13 +171,13 @@ class MagCalibrator:
 
   The result is the smallest span divided by the target span of a full sphere
     of $field-strength microtesla, which is twice that value. It is a rough
-    guide to how much of a full turn you have covered. It reaches 1.0 once
+    guide to how much of a full turn the board has covered. It reaches 1.0 once
     every axis has seen the field at both ends.
 
-  The $field-strength is a guess that you can change. The default of 50 µT
+  The $field-strength is a guess that can be changed. The default of 50 µT
     is my assumption for the order of magnitude of the Earth's field, and
-    it is not taken from the datasheet. Use the strength you expect at your
-    location.
+    it is not taken from the datasheet. The strength expected at the
+    location is the value to use.
   */
   progress --field-strength/num=50.0 -> float:
     smallest := min span-x (min span-y span-z)
@@ -186,7 +187,7 @@ class MagCalibrator:
   Whether every axis has covered at least $min-span microtesla.
 
   The default of 40 µT is a choice made for this class, aimed at a field of
-    about 50 µT. Pass a different value for a stronger or weaker field.
+    about 50 µT. A different value suits a stronger or weaker field.
   */
   is-ready --min-span/num=40.0 -> bool:
     if count_ < 2: return false
@@ -196,7 +197,7 @@ class MagCalibrator:
   Returns the calibration for the readings added so far.
 
   Throws if an axis has no range at all, because there is nothing to
-    calibrate from. Use $is-ready first to check there is enough data.
+    calibrate from. $is-ready checks first that there is enough data.
   */
   calibration -> MagCalibration:
     if count_ < 2 or span-x <= 0.0 or span-y <= 0.0 or span-z <= 0.0:

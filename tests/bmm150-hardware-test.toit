@@ -5,25 +5,25 @@
 /**
 Self-checking tests for a BMM150 wired to an ESP32. Needs real hardware.
 
-Wire the module's SDA, SCL, power and ground to the ESP32, edit the pin numbers
-  below if yours differ, and run with Jaguar. To test the DRDY and INT pins too,
-  wire them to the pins named by $DRDY-PIN and $INT-PIN. Leave a pin at null if
-  it is not wired:
+The module's SDA, SCL, power and ground need to be wired to the ESP32. The pin
+  numbers below can be edited if the setup differs, and the test runs with
+  Jaguar. Testing the DRDY and INT pins too needs them wired to the pins named
+  by $DRDY-PIN and $INT-PIN. A pin that is not wired stays at null:
 ```
-jag run -d <your device> tests/bmm150-hardware-test.toit
+jag run -d <device> tests/bmm150-hardware-test.toit
 ```
 
-Keep the board still and a few centimeters away from motors, magnets, speakers
-  and steel tables while it runs. Every check prints PASS, FAIL, WARN or SKIP.
+The board needs to be kept still and a few centimeters away from motors,
+  magnets, speakers and steel tables while the test runs. Every check prints PASS, FAIL, WARN or SKIP.
   A FAIL means something is wrong with the driver, the wiring or the chip. A
   WARN means a value is odd but not wrong, usually because of the surroundings.
 
 The thresholds come from two places. Limits taken from the datasheet say so in
   their comments. The others are choices made for this test, and they are
-  marked as such. Change them at the top of the file if your setup needs it.
+  marked as such. Change them at the top of the file if the setup needs it.
 
-Set $ROTATE-TEST to true to add a hands-on check. It asks you to turn the board
-  through all orientations and checks that the field strength stays constant.
+Setting $ROTATE-TEST to true adds a hands-on check. It asks for the board to
+  be turned through all orientations and checks that the field strength stays constant.
 */
 
 import gpio

@@ -38,8 +38,33 @@ has been tried with this driver:
 
 ## Wiring
 
-Four wires: power, ground, SDA and SCL. The I2C address is 0x10 by default. The
-CSB and SDO pins move it:
+The chip has one set of interface pins that serves both I2C and SPI. The PS
+(protocol select) pin chooses which. The datasheet says "PS: “0” (“1”) selects
+SPI (I²C)." This driver implements I2C only, so PS has to sit at logic 1. The
+datasheet adds: "In case the I²C interface is used, a direct electrical
+connection between VDDIO supply and the PS pin is recommended in order to ensure
+reliable protocol selection."
+
+### I2C (what this driver uses)
+
+Eight pins matter: three for power and ground, one for the mode, two for the
+bus and two for the address. The pin names and roles below come from the datasheet's table of
+interface pins (SDI is SDA and SCK is SCL in I2C mode).
+
+| BMM150 pin | Connect to | Notes |
+| -- | -- | -- |
+| VDD | Supply, 1.62 V to 3.6 V | Analog supply. |
+| VDDIO | Supply, 1.2 V to 3.6 V | Interface supply. Usually the same rail as VDD. |
+| GND | Ground | |
+| PS | VDDIO | Selects I2C. |
+| SCK | SCL on the ESP32 | I2C clock. |
+| SDI | SDA on the ESP32 | I2C data. |
+| CSB | GND or VDDIO | Sets address bit 1. |
+| SDO | GND or VDDIO | Sets address bit 0. |
+
+The default address is 0x10, with CSB and SDO both at GND. The datasheet says
+the five high bits are fixed at "00100", and that CSB and SDO invert the two low
+bits:
 
 | CSB | SDO | Address |
 | -- | -- | -- |
@@ -48,18 +73,43 @@ CSB and SDO pins move it:
 | VDDIO | GND | 0x12 |
 | VDDIO | VDDIO | 0x13 |
 
-The chip picks I2C or SPI from its PS pin. The datasheet says "In case the I²C
-interface is used, a direct electrical connection between VDDIO supply and the
-PS pin is recommended in order to ensure reliable protocol selection." A
-breakout board probably does this for you, which is a guess. Check yours.
+My reading, not stated outright in the datasheet: tie CSB and SDO to a rail
+instead of leaving them open, because they set the address and the datasheet
+says the internal CSB pull-up is "deactivated in I²C mode". SDA and SCL also
+need pull-up resistors to VDDIO. That is general I2C practice, and many
+breakout boards already have them.
+
+### SPI (not implemented in this driver)
+
+This is listed for reference only. For SPI, PS goes to GND and the four lines
+take these roles, per the datasheet's pin table:
+
+| BMM150 pin | SPI role |
+| -- | -- |
+| CSB | Chip select, active low. |
+| SCK | Serial clock. |
+| SDI | Data in (MOSI) in 4-wire mode. Data in and out in 3-wire mode. |
+| SDO | Data out (MISO) in 4-wire mode. |
+
+The datasheet says the chip starts in 4-wire mode and switches to 3-wire when
+"1" is written to "SPI3en" in register 0x4B.
+
+### Breakout boards and power
+
+Many breakout boards fix PS, CSB and SDO with solder jumpers or resistors, and
+some bring out only SDA, SCL, power and ground. Whether a given board does this
+is a guess, so check its schematic. If it exposes PS, CSB or SDO, wire them as
+in the table above.
 
 The chip takes "VDD supply voltage range: 1.62V to 3.6V" and "VDDIO interface
 voltage range: 1.2V to 3.6V" (datasheet). Keep every interface line low or
 floating while VDDIO is off: "It is absolutely prohibited to keep any interface
 at a logical high level when VDDIO is switched off."
 
-Change the pin numbers to match your board when using the examples. The chip
-has two output pins that you can wire to free GPIOs. DRDY goes high when a new
+### Optional output pins
+
+Change the pin numbers to match the board when using the examples. The chip has
+two output pins that can go to free GPIOs. DRDY goes high when a new
 measurement is ready, which lets the ESP32 wait on the pin instead of asking the
 chip over I2C. INT reports the threshold and overflow interrupts. The example
 `data-ready-interrupt.toit` uses DRDY.

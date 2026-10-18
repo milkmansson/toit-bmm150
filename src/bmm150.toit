@@ -37,8 +37,8 @@ main:
 # Calibration
 The factory trim values fix errors inside the chip, and the driver applies them
   in $read-mag-compensated. What the rest of the board adds to the field is
-  different for every board. Pass a $MagCalibration with the constructor's
-  `--calibration` argument and $read-mag-compensated applies that as well.
+  different for every board. A $MagCalibration given through the constructor's
+  `--calibration` argument is applied by $read-mag-compensated as well.
   $read-mag-raw never does.
 
 # Reading data
@@ -224,13 +224,13 @@ class Bmm150:
   Powers up the chip and starts continuous measurement.
 
   Measurement runs in normal mode. The $preset sets the number of repetitions
-    per measurement and a matching output data rate. Pass one of the PRESET
-    constants, such as $PRESET-REGULAR. Pass an $odr, such as $ODR-25HZ, to
-    replace the preset's rate. Repetitions work like averaging: more of them
+    per measurement and a matching output data rate. Any of the PRESET
+    constants works, such as $PRESET-REGULAR. An $odr, such as $ODR-25HZ,
+    replaces the preset's rate. Repetitions work like averaging: more of them
     lower the noise and raise the current.
 
   With a $calibration, $read-mag-compensated also corrects the field for the
-    board the chip sits on. Leave it out to get the field as the chip reports
+    board the chip sits on. Without one, the field is as the chip reports
     it, with only the factory corrections.
 
   The constructor resets the chip's settings to their power-on values first.
@@ -278,8 +278,8 @@ class Bmm150:
   /**
   Resets the chip to its power-on settings and leaves it in sleep mode.
 
-  The trim values stay valid. Call $set-preset or $set-odr, and then $set-mode,
-    to resume measuring. The reset also clears the interrupt settings and turns
+  The trim values stay valid. Resuming needs $set-preset or $set-odr, and
+    then $set-mode. The reset also clears the interrupt settings and turns
     all axes back on.
 
   The chip ignores a soft reset in suspend mode, so the driver wakes it first.
@@ -302,8 +302,8 @@ class Bmm150:
     the output data rate, the repetitions, the axes, the thresholds and the
     interrupt settings.
 
-  In forced mode the chip takes one measurement and returns to sleep mode. Read
-    the result with $read-raw-data afterwards, which waits for it. The datasheet
+  In forced mode the chip takes one measurement and returns to sleep mode. The
+    result is read with $read-raw-data afterwards, which waits for it. The datasheet
     says this is "useful to achieve synchronized operation between host
     microcontroller and BMM150" (section 4.2.4). The driver reads the data
     registers once before it starts, so an unread result from before cannot
@@ -456,15 +456,15 @@ class Bmm150:
     resistance and the data ready flag. They come from a single burst read, so
     they all belong to the same measurement. The datasheet recommends this:
     "it is recommended to read out at all data at once (0x42 to 0x49 or 0x4A if
-    status bits are also required) with a burst read" (section 4.3.1). Pass
-    them to $read-mag-compensated, $read-mag-raw, $read-rhall or $has-overflow
-    to convert them.
+    status bits are also required) with a burst read" (section 4.3.1). They
+    can be passed to $read-mag-compensated, $read-mag-raw, $read-rhall or
+    $has-overflow for conversion.
 
   With $wait set, which is the default, this waits for the data ready flag and
     throws if it stays low for 1.5 seconds, which is what happens in sleep or
     suspend mode. With $wait off, it returns whatever the data registers hold
-    at that moment. Use that when the DRDY pin has told you that a measurement
-    is ready.
+    at that moment. That suits the case where the DRDY pin has signaled that a
+    measurement is ready.
   */
   read-raw-data --wait/bool=true -> ByteArray:
     if not wait: return reg_.read-bytes REG-DATA-X-LSB_ DATA-LENGTH_
@@ -496,7 +496,7 @@ class Bmm150:
 
   Throws an exception if an enabled axis is out of range. The datasheet says
     that the data register "is saturated to the most negative value" then
-    (section 4.6.6). Use $has-overflow to test for that first.
+    (section 4.6.6). $has-overflow tests for that first.
   */
   read-mag-compensated bytes/ByteArray=read-raw-data -> Point3f:
     raw := parse_ bytes
@@ -518,8 +518,8 @@ class Bmm150:
   /**
   Reads the raw X, Y and Z counts, with no corrections at all.
 
-  The values are counts of the chip's data registers, not µT. Use
-    $read-mag-compensated for readings that are meant to be accurate. This
+  The values are counts of the chip's data registers, not µT. 
+    $read-mag-compensated is the call for readings that are meant to be accurate. This
     version is cheaper and is useful for comparing against the compensated
     values. Disabled axes (see $enable-axis) read as 0.0.
   */
@@ -700,8 +700,8 @@ class Bmm150:
     of "FlipCore (X and Y) connection to ASIC", the Hall sensor connections and
     the signal path (section 4.4.1). The advanced self-test is not implemented.
 
-  The test needs sleep mode, so this leaves the chip in sleep mode. Call
-    $set-mode afterwards to measure again.
+  The test needs sleep mode, so this leaves the chip in sleep mode. Measuring
+    again needs $set-mode afterwards.
   */
   self-test -> bool:
     set-mode MODE-SLEEP

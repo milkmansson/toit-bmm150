@@ -6,12 +6,13 @@
 //
 // The sensor and the display share one I2C bus.
 //
-// Hold the board flat and turn it. The needle should keep pointing the same
-// way in the room while the board turns under it, and the dots on the right
-// should trace a ring.
+// With the board held flat and turned, the needle should keep pointing the
+// same way in the room while the board turns under it, and the dots on the
+// right should trace a ring.
 //
-// Run calibrate.toit first to get numbers for CALIBRATION. Without them, the
-// needle will be off by an amount that depends on the board.
+// The numbers for CALIBRATION come from calibrate.toit, which needs to run
+// first. Without them, the needle will be off by an amount that depends on the
+// board.
 
 import math
 import bmm150 show Bmm150
@@ -21,17 +22,17 @@ import pixel-display.two-color show BLACK
 
 import .display-views
 
-// Paste the line that calibrate.toit prints here.
+// The line that calibrate.toit prints goes here.
 //CALIBRATION ::= MagCalibration.NONE
-CALIBRATION ::= MagCalibration --offset-x=-103.442 --offset-y=31.554 --offset-z=-177.869 --scale-x=1.0779 --scale-y=1.0861 --scale-z=0.8684
+CALIBRATION ::= MagCalibration --offset-x=-89.832 --offset-y=40.002 --offset-z=-159.742 --scale-x=1.0762 --scale-y=1.1297 --scale-z=0.8434
 
-// Whether the chip turns the opposite way to what the dial assumes. Run
-// calibrate.toit to find out, or leave it false and try it.
+// Whether the chip turns the opposite way to what the dial assumes. 
+// calibrate.toit finds this out, or it can be left false and tried by hand.
 // MIRROR ::= false
 MIRROR ::= true
 
 // Turns the dial clockwise by this many degrees, to match how the chip sits on
-// your breakout. Try 90, 180 or 270 if the needle moves the wrong way.
+// the breakout. If the needle moves the wrong way, 90, 180 or 270 may fix it.
 // ROTATE-DEGREES ::= 270
 ROTATE-DEGREES ::= 180
 

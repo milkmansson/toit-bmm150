@@ -1,7 +1,7 @@
 # Tests for the BMM150 driver
 
-These tests are for people working on the driver. You do not need them to use
-it. There are three kinds: tests that run without any hardware, a test that runs
+These tests are for people working on the driver. Using the driver does not need
+them. There are three kinds: tests that run without any hardware, a test that runs
 on a board with the chip attached, and tests for the calibration maths.
 
 The files in this folder:
@@ -15,7 +15,7 @@ The files in this folder:
 - `test-helpers.toit` is a small test runner shared by the mock and hardware
   tests.
 
-Run everything from this folder. The first time, install the packages:
+Everything runs from this folder. The first time, the packages need installing:
 
 ```
 toit pkg install
@@ -37,9 +37,9 @@ the last value of a disabled axis in its data registers.
 The compensation checks compare the driver with numbers from Bosch's own sensor
 API. `golden/bmm150-golden.c` feeds made-up trim bytes and raw register bytes
 into Bosch's code, and `golden-vectors.toit` holds what came back. The same
-file checks how the driver decodes the trim bytes and the raw counts. To
-regenerate it, put Bosch's API files (`bmm150.c`, `bmm150.h` and
-`bmm150_defs.h`) in `.reference/` at the root of the package and run:
+file checks how the driver decodes the trim bytes and the raw counts. Regenerating
+it needs Bosch's API files (`bmm150.c`, `bmm150.h` and `bmm150_defs.h`) in
+`.reference/` at the root of the package, and then:
 
 ```
 cd golden
@@ -64,8 +64,8 @@ and checks that the calibrator finds them again.
 jag run bmm150-hardware-test.toit
 ```
 
-Keep the board still and away from motors, magnets and steel while it runs. The
-test checks the chip ID, the chip's own self-test, the field and Hall resistance
+The board needs to be kept still and away from motors, magnets and steel while
+the test runs. The test checks the chip ID, the chip's own self-test, the field and Hall resistance
 ranges, every rate and preset, the measured rate at seven rates, the forced
 measurement time against the datasheet formula, the noise of every preset
 against the datasheet, forced mode, suspend and wake, soft reset and axis
@@ -75,10 +75,10 @@ One check settles an open question. The datasheet's text for the Z repetitions
 register disagrees with its own preset table. The test sets Z to 81
 repetitions (register value 40), times a forced measurement, and compares the
 time with both readings. It fails if the chip follows the register text. The
-result is printed, so look at the numbers even when it passes.
+result is printed, and the numbers are worth a look even when the check passes.
 
 If the chip's DRDY pin or INT pin is wired to the ESP32, the test also watches
-the pin. Set `DRDY-PIN` and `INT-PIN` at the top of the file to the ESP32 pins
+the pin. `DRDY-PIN` and `INT-PIN` at the top of the file hold the ESP32 pins
 they are wired to. Both are `null` by default, which skips the pin checks. The
 DRDY checks cover:
 
@@ -103,10 +103,10 @@ because of the surroundings. Limits from the datasheet are named in the source.
 The others are choices made for this test and are marked as such at the top of
 the file.
 
-Set `ROTATE-TEST` to `true` to add a hands-on check. It asks you to turn the
-board through every orientation for 20 seconds, then compares how constant the
+Setting `ROTATE-TEST` to `true` adds a hands-on check. It asks for the board to
+be turned through every orientation for 20 seconds, then compares how constant the
 field strength stays with and without a calibration made from the same run. It
-also prints that calibration, which is a starting point for your own.
+also prints that calibration, which is a starting point for a real one.
 
 The hardware test has not been run on a real chip yet. Its checks were tried
 against the simulated chip, where only the two timing checks fail, because the

@@ -9,8 +9,8 @@ import bmm150 show Bmm150
 /**
 Reads the BMM150 each time its DRDY pin reports a new measurement.
 
-Wire the chip's DRDY pin to the ESP32 pin named in $DRDY-PIN. The program turns
-  on the data ready signal, then waits for the pin to go high instead of asking
+The chip's DRDY pin needs to be wired to the ESP32 pin named in $DRDY-PIN. The
+  program turns on the data ready signal, then waits for the pin to go high instead of asking
   the chip over I2C whether a sample is ready. That leaves the processor free
   between samples.
 

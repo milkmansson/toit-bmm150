@@ -7,7 +7,7 @@ A bare-bones compass: the angle of the field in the X-Y plane.
 
 This only works while the board is held level, and it has no calibration for
   nearby steel or magnets. Which way the board points at 0 degrees depends on
-  how the chip sits on your breakout.
+  how the chip sits on the breakout.
 */
 
 import i2c

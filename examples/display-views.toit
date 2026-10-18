@@ -54,17 +54,17 @@ open-bus -> i2c.Bus:
 Returns a display for the SSD1306 on the $bus, or throws if none answers.
 
 The $rotation turns the picture clockwise by 0, 90, 180 or 270 degrees. 0 is
-  the orientation that these examples used before the setting existed. If your
-  picture is turned, try the other values. With 90 or 270 the picture is tall,
-  with 64 pixels across and 128 down, and the examples lay themselves out to
-  match.
+  the orientation that these examples used before the setting existed. If the
+  picture is turned, the other values may fix it. With 90 or 270 the picture
+  is tall, with 64 pixels across and 128 down, and the examples lay
+  themselves out to match.
 
 The $flip option mirrors the picture top to bottom in the driver's own frame.
-  Some display modules need it. Try it if the picture is a mirror image, which
-  turning cannot fix.
+  Some display modules need it. It fixes a picture that is a mirror image,
+  which turning cannot do.
 
-If black and white are swapped, add `--inverse` to the driver call below. That
-  is the driver's option, and it is different from the turn.
+Swapped black and white are fixed by adding `--inverse` to the driver call
+  below. That is the driver's option, and it is different from the turn.
 */
 open-display bus/i2c.Bus --rotation/int=0 --flip/bool=false -> PixelDisplay:
   if not [0, 90, 180, 270].contains rotation:
@@ -116,9 +116,9 @@ A compass dial with a needle.
 The needle points at magnetic north as seen from the board. The top of the
   dial stands for the board's +X direction, and the dial assumes the board is
   level with the chip's Z axis pointing up. Both of those are assumptions,
-  and the real axis directions depend on how the chip sits on your breakout.
-  Use the `rotate-degrees` argument of $update to turn the dial until it
-  matches the board.
+  and the real axis directions depend on how the chip sits on the breakout.
+  The `rotate-degrees` argument of $update turns the dial until it matches
+  the board.
 */
 class CompassView extends CustomElement:
   size_/int
@@ -226,7 +226,7 @@ class ScatterView extends CustomElement:
     half-h := height_ / 2
     plot-x := field-x
     plot-y := mirror_ ? -field-y : field-y
-    // Turn clockwise on the plot, where X is right and Y is up.
+    // The turn is clockwise on the plot, where X is right and Y is up.
     if rotate-degrees_ == 90:
       plot-x = plot-y
       plot-y = -field-x

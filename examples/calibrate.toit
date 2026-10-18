@@ -13,23 +13,23 @@ import .display-views
 /**
   Works out a calibration for the board and prints it as a line of Toit. It
   also works out how the dial in compass-display.toit should be turned to match
-  the way the chip sits on your breadboard.
+  the way the chip sits on the breadboard.
 
-  Mount the board where it will live, with its wires and battery in place, and
-  run this. For the collection time, turn the board slowly through every
-  orientation, like tracing a figure of eight in the air. The scatter plot on
-  the right shows the raw X and Y readings. Then the example shows the
-  corrected readings for ten seconds so you can see whether the ring sits on
-  the cross.
+  The board needs to be mounted where it will live, with its wires and battery
+  in place, before this runs. During the collection time, the board needs to
+  be turned slowly through every orientation, like tracing a figure of eight
+  in the air. The scatter plot on the right shows the raw X and Y readings.
+  Then the example shows the corrected readings for ten seconds, which shows
+  whether the ring sits on the cross.
 
   The steps are:
   1. A short countdown, then the turning phase for the calibration.
   2. Ten seconds of corrected readings, to judge the ring.
-  3. "Point N": hold the board level with the top of the display towards
-     magnetic north, and keep it still. Use your watch or phone compass to find
-     north, and keep the board away from steel and magnets.
-  4. "Point E": turn the board a quarter turn clockwise, as seen from above, so
-     that the top of the display points east, and keep it still.
+  3. "Point N": the board is held level with the top of the display towards
+     magnetic north, and kept still. A watch or phone compass finds north.
+     The board stays away from steel and magnets.
+  4. "Point E": the board is turned a quarter turn clockwise, as seen from
+     above, so that the top of the display points east, and kept still.
 
   The orientation steps come after the calibration on purpose. The angle of the
   field is only meaningful once the offsets are removed.
@@ -39,17 +39,17 @@ import .display-views
   assume. I assume that, with Z pointing up, a clockwise turn of the board
   raises the angle of the field by 90 degrees. If it lowers the angle, the
   result is "mirrored". Both are guesses about how breakouts are built, so
-  check them against what the needle does.
+  they need to be checked against what the needle does.
 
-  Copy the lines it prints into compass-display.toit.
+  The lines it prints go into compass-display.toit.
 
   When it finishes, the display shows "Done" and then steps through the
   numbers, one every few seconds, to the right of that word. The letter o
   stands for an offset in microtesla and s for a scale, followed by the axis.
-  That way you can read the calibration from the display when the board runs
-  from a battery and no serial output is in reach. To copy it by hand, build
-  a line such as `MagCalibration --offset-x=12.35 --scale-x=1.020`, and add
-  the other axes in the same way. The display rounds, so the printed line is
+  That way the calibration can be read from the display when the board runs
+  from a battery and no serial output is in reach. To copy it by hand, a
+  line such as `MagCalibration --offset-x=12.35 --scale-x=1.020` is built,
+  with the other axes added in the same way. The display rounds, so the printed line is
   slightly more exact.
 */
 
@@ -61,7 +61,7 @@ START-DELAY-SECONDS ::= 5
 // made for this example.
 SHOW-SECONDS ::= 3
 
-// How long to wait in each pose before sampling, in seconds, to give you time
+// How long to wait in each pose before sampling, in seconds, to leave time
 // to move the board and let it settle, and how long to sample for. Both are
 // choices made for this example.
 POSE-SETTLE-SECONDS ::= 6
@@ -69,8 +69,8 @@ POSE-SAMPLE-SECONDS ::= 3
 
 // The dial rotation is rounded to a multiple of this many degrees. A chip on a
 // breadboard usually sits square to the edges, and a handheld pose is only
-// good to some degrees, so the rounding hides the pointing error. Use 1 to
-// keep the measured angle. A choice made for this example.
+// good to some degrees, so the rounding hides the pointing error. A value of 1
+// keeps the measured angle. A choice made for this example.
 SNAP-DEGREES ::= 90
 
 // A turn smaller than this many degrees between the two poses is treated as
@@ -97,7 +97,7 @@ SCATTER-RANGE ::= 80
 
 // Turns only the scatter plot, clockwise, by 0, 90, 180 or 270 degrees. The
 // plot normally shows the chip's X axis to the right and its Y axis up, which
-// may not match how the chip sits on your board. The dial and the poses are not
+// may not match how the chip sits on the board. The dial and the poses are not
 // affected.
 PLOT-ROTATION ::= 90
 
