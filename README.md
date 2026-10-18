@@ -154,7 +154,7 @@ main:
   print sensor.read-mag-compensated
 ```
 
-`examples/read-spi.toit` is this program with a retry message. The pin numbers
+`examples/read-spi.toit` is this program with an error message for a chip that does not answer. The pin numbers
 are choices for the example. The SDK's SPI bus takes any free GPIOs.
 
 What the datasheet says about the protocol, which the driver relies on:
