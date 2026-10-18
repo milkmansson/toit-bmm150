@@ -1,0 +1,4 @@
+name: bmm150
+description: Toit driver for the Bosch Sensortec BMM150 three-axis magnetometer.
+environment:
+  sdk: ^2.0.0-alpha.189
