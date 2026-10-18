@@ -303,9 +303,9 @@ class Bmm150:
     interrupt settings.
 
   In forced mode the chip takes one measurement and returns to sleep mode. The
-    result is read with $read-raw-data afterwards, which waits for it. The datasheet
-    says this is "useful to achieve synchronized operation between host
-    microcontroller and BMM150" (section 4.2.4). The driver reads the data
+    result is read with $read-raw-data afterwards, which waits for it. The
+    datasheet says this is "useful to achieve synchronized operation between
+    host microcontroller and BMM150" (section 4.2.4). The driver reads the data
     registers once before it starts, so an unread result from before cannot
     pass for the new one.
   */
@@ -518,10 +518,10 @@ class Bmm150:
   /**
   Reads the raw X, Y and Z counts, with no corrections at all.
 
-  The values are counts of the chip's data registers, not µT. 
-    $read-mag-compensated is the call for readings that are meant to be accurate. This
-    version is cheaper and is useful for comparing against the compensated
-    values. Disabled axes (see $enable-axis) read as 0.0.
+  The values are counts of the chip's data registers, not µT.
+    $read-mag-compensated is the call for readings that are meant to be
+    accurate. This version is cheaper and is useful for comparing against the
+    compensated values. Disabled axes (see $enable-axis) read as 0.0.
   */
   read-mag-raw bytes/ByteArray=read-raw-data -> Point3f:
     raw := parse_ bytes
