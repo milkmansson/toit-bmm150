@@ -1,8 +1,9 @@
 # Toit driver for the Bosch Sensortec BMM150 magnetometer
 
 A Toit driver for the BMM150, a three-axis magnetometer. It returns the magnetic
-field in microtesla (µT). The chip supports I2C and SPI. This driver implements
-I2C only.
+field in microtesla (µT). The chip supports I2C and SPI. The driver works with an
+I2C device or a 4-wire SPI device. See [Using SPI](#using-spi) for what SPI
+adds and what it costs.
 
 The chip has no temperature output. It measures the resistance of its Hall
 plate instead, and the driver uses that value to correct the field readings.
@@ -79,10 +80,10 @@ says the internal CSB pull-up is "deactivated in I²C mode". SDA and SCL also
 need pull-up resistors to VDDIO. That is general I2C practice, and many
 breakout boards already have them.
 
-### SPI (not implemented in this driver)
+### SPI
 
-This is listed for reference only. For SPI, PS goes to GND and the four lines
-take these roles, per the datasheet's pin table:
+For SPI, PS goes to GND and the four lines take these roles, per the
+datasheet's pin table:
 
 | BMM150 pin | SPI role |
 | -- | -- |
@@ -92,7 +93,7 @@ take these roles, per the datasheet's pin table:
 | SDO | Data out (MISO) in 4-wire mode. |
 
 The datasheet says the chip starts in 4-wire mode and switches to 3-wire when
-"1" is written to "SPI3en" in register 0x4B.
+"1" is written to "SPI3en" in register 0x4B. The driver stays in 4-wire mode.
 
 ### Breakout boards and power
 
@@ -129,6 +130,73 @@ main:
 The constructor powers up the chip, resets its settings, reads the factory trim
 values, applies the regular preset (10 Hz) and starts normal mode. Pass
 `--preset` and `--odr` to start with other settings.
+
+## Using SPI
+
+The constructor takes a `serial.Device`, and the SDK's `spi.Device` is one, so
+SPI needs only a different way of making the device:
+
+```
+import gpio
+import spi
+import bmm150 show Bmm150
+
+main:
+  bus := spi.Bus
+    --clock=gpio.Pin 6
+    --mosi=gpio.Pin 18
+    --miso=gpio.Pin 19
+  device := bus.device
+    --cs=gpio.Pin 22
+    --frequency=1_000_000
+    --mode=0
+  sensor := Bmm150 device
+  print sensor.read-mag-compensated
+```
+
+`examples/read-spi.toit` is this program with a retry message. The pin numbers
+are choices for the example. The SDK's SPI bus takes any free GPIOs.
+
+What the datasheet says about the protocol, which the driver relies on:
+
+- "The SPI interface of the BMM150 is compatible with two modes, “00” and “11”."
+- "Bit0: Read/Write bit. When 0, the data SDI is written into the chip. When 1,
+  the data SDO from the chip is read. Bit1-7: Address AD(6:0)."
+- "Multiple read operations are possible by keeping CSB low and continuing the
+  data transfer."
+- The highest clock is 10 MHz (table 29).
+
+My reading, not tested: "Bit0" is the first bit on the wire, so reads set the
+top bit of the first byte. That is the SDK's default for `spi.Registers`, which
+is why the driver needs no SPI-specific code.
+
+The drawbacks:
+
+- A faster bus does not give faster readings. The highest output data rate is
+  30 Hz (table 17, "111b: 30"), so a new sample arrives every 33 ms at best. By
+  my estimate, which I have not measured, the 8-byte data read is about 100 bits
+  on I2C, which is roughly 0.25 ms at 400 kHz. SPI can save only a part of that.
+- SPI needs more wires. I2C uses SDA and SCL for any number of chips. SPI needs
+  a clock, MOSI and MISO, plus one chip select per chip, and PS has to be at GND.
+- Many breakout boards bring out only I2C, or fix PS high. That is a guess from
+  the boards I know of, so check the schematic of the board.
+- Only 4-wire SPI is used. The driver never sets "SPI3en", and the SDK's bus has
+  separate MOSI and MISO pins.
+- Reserved registers can float. The datasheet says "in SPI mode the SDO pin may
+  stay in high-Z state when reading some of these registers". The driver reads
+  only defined registers, and it skips the reserved ones between the trim values,
+  as Bosch's code does.
+- In suspend mode, "a Chip ID read (register 0x40) returns “0x00” (I²C) or
+  high-Z (SPI)". The driver already refuses to read other registers in suspend
+  mode, and it powers the chip up before it reads the chip ID.
+- The SPI path has not been run on a chip. The mock test replaces the bus, so it
+  cannot show whether the SDK's SPI framing matches the chip. The
+  hardware test has a switch for it (see [tests/README.md](tests/README.md)).
+- The display examples (`calibrate.toit` and `compass-display.toit`) still use
+  I2C for the display. `read-spi.toit` is the only SPI example.
+
+The one case where SPI helps, in my judgement, is a board that is wired for SPI
+only, or an I2C bus where the four addresses are not enough.
 
 ## Reading data
 
@@ -183,10 +251,12 @@ if you try to use the chip, since the registers would not answer.
 
 ## Examples
 
-All examples use the pins from the wiring section. Be sure to change them when
+All I2C examples use the pins from the wiring section. Be sure to change them when
 required.
 
 - `read-simple.toit` prints 100 compensated readings.
+- `read-spi.toit` prints 100 compensated readings over 4-wire SPI. It has its own
+  pin numbers at the top, and PS has to be tied to GND.
 - `read-verbose.toit` prints raw and compensated readings with their strength
   and the Hall resistance.
 - `configure-rate.toit` picks a preset and a rate, and prints what the chip
@@ -290,6 +360,8 @@ They are described in [tests/README.md](tests/README.md).
 - Not run on a real chip yet. The mock test and the comparison with Bosch's code
   cover the register handling and the maths. They cannot show timing, the
   chip's reaction to illegal sequences, or the points below.
+- SPI has not been run on a real chip. See [Using SPI](#using-spi) for the
+  drawbacks and the points that only hardware can settle.
 - Z repetitions are an open question. The datasheet's register text for Z gives
   `nZ = 1 + REPZ` (section 5.8). Its preset table and Bosch's code only fit
   `1 + 2 * REPZ`. The driver follows the table. `bmm150-hardware-test.toit` times
@@ -305,7 +377,7 @@ They are described in [tests/README.md](tests/README.md).
 - The trim registers (0x5D to 0x71) and the compensation formulas are not in the
   datasheet. They come from Bosch's reference code (`bmm150.c`, floating-point
   version), and the golden vectors in the tests come from that code.
-- Not implemented: SPI, the advanced self-test (it needs Bosch's application
+- Not implemented: 3-wire SPI, the advanced self-test (it needs Bosch's application
   note for the thresholds), and the data overrun interrupt beyond reporting its
   flag.
 

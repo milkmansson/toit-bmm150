@@ -97,6 +97,13 @@ step is needed:
 - the low threshold,
 - active-low polarity.
 
+Setting `USE-SPI` to `true` at the top of the file runs the same checks over
+4-wire SPI. `SPI-CLOCK-PIN`, `SPI-MOSI-PIN`, `SPI-MISO-PIN` and `SPI-CS-PIN` name
+the ESP32 pins, and the chip's PS pin needs to be tied to GND. The I2C address
+check does not apply then. Most checks are about the chip and do not depend on
+the bus, so a failure that appears only over SPI points at the SPI path. The
+mock test cannot show that, because it replaces the bus.
+
 Each line ends in PASS, FAIL, WARN or SKIP. A FAIL points at the driver, the
 wiring or the chip. A WARN means a value looks odd without being wrong, usually
 because of the surroundings. Limits from the datasheet are named in the source.

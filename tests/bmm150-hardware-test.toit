@@ -13,6 +13,11 @@ The module's SDA, SCL, power and ground need to be wired to the ESP32. The pin
 jag run -d <device> tests/bmm150-hardware-test.toit
 ```
 
+Setting $USE-SPI to true runs the same checks over 4-wire SPI. The ESP32 pins
+  for the clock, MOSI, MISO and chip select are $SPI-CLOCK-PIN, $SPI-MOSI-PIN,
+  $SPI-MISO-PIN and $SPI-CS-PIN. The chip's PS pin needs to be at GND then, and
+  the I2C address check is skipped.
+
 The board needs to be kept still and a few centimeters away from motors,
   magnets, speakers and steel tables while the test runs. Every check prints PASS, FAIL, WARN or SKIP.
   A FAIL means something is wrong with the driver, the wiring or the chip. A
@@ -29,6 +34,8 @@ Setting $ROTATE-TEST to true adds a hands-on check. It asks for the board to
 import gpio
 import i2c
 import log
+import serial
+import spi
 import math show sqrt
 import bmm150 show *
 import bmm150.calibration show MagCalibrator
@@ -37,6 +44,17 @@ import .test-helpers
 SDA-PIN ::= 21
 SCL-PIN ::= 20
 I2C-FREQUENCY ::= 400_000
+
+/** Set to true to run the checks over 4-wire SPI instead of I2C. */
+USE-SPI ::= false
+
+// SPI pins, used when $USE-SPI is true. The pins are choices made for this
+// test, and the frequency is a cautious choice below the datasheet's 10 MHz.
+SPI-CLOCK-PIN ::= 6
+SPI-MOSI-PIN ::= 18
+SPI-MISO-PIN ::= 19
+SPI-CS-PIN ::= 22
+SPI-FREQUENCY ::= 1_000_000
 
 /** The ESP32 pin that the chip's DRDY pin is wired to, or null if it is not wired. */
 DRDY-PIN/int? ::= null
@@ -160,22 +178,36 @@ main:
   run := TestRun
   run.section "Bus and identity"
 
-  bus/i2c.Bus? := null
+  device/serial.Device? := null
   sensor/Bmm150? := null
 
-  run.check "I2C bus opens":
-    bus = i2c.Bus
-        --sda=SDA-PIN
-        --scl=SCL-PIN
-        --frequency=I2C-FREQUENCY
+  if USE-SPI:
+    run.check "SPI bus opens":
+      spi-bus := spi.Bus
+          --clock=(gpio.Pin SPI-CLOCK-PIN)
+          --mosi=(gpio.Pin SPI-MOSI-PIN)
+          --miso=(gpio.Pin SPI-MISO-PIN)
+      device = spi-bus.device
+          --cs=(gpio.Pin SPI-CS-PIN)
+          --frequency=SPI-FREQUENCY
+          --mode=0
+  else:
+    bus/i2c.Bus? := null
+    run.check "I2C bus opens":
+      bus = i2c.Bus
+          --sda=SDA-PIN
+          --scl=SCL-PIN
+          --frequency=I2C-FREQUENCY
 
-  run.check "chip answers at 0x$(%02x Bmm150.I2C-ADDRESS)":
-    if not bus: throw "no bus"
-    if not (bus.test Bmm150.I2C-ADDRESS):
-      throw "nothing at 0x$(%02x Bmm150.I2C-ADDRESS). Check wiring and the CSB and SDO pins (0x11 to 0x13 when they are high)."
+    run.check "chip answers at 0x$(%02x Bmm150.I2C-ADDRESS)":
+      if not bus: throw "no bus"
+      if not (bus.test Bmm150.I2C-ADDRESS):
+        throw "nothing at 0x$(%02x Bmm150.I2C-ADDRESS). Check wiring and the CSB and SDO pins (0x11 to 0x13 when they are high)."
+      device = bus.device Bmm150.I2C-ADDRESS
 
   run.check "driver starts":
-    sensor = Bmm150 (bus.device Bmm150.I2C-ADDRESS) --logger=(log.default.with-level log.WARN-LEVEL)
+    if not device: throw "no bus device"
+    sensor = Bmm150 device --logger=(log.default.with-level log.WARN-LEVEL)
     require-equals 0x32 sensor.get-chip-id
 
   if sensor == null:

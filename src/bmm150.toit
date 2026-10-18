@@ -13,8 +13,9 @@ import .calibration show MagCalibration
 Toit driver for the Bosch Sensortec BMM150 magnetometer.
 
 The BMM150 measures the magnetic field on three axes. This driver talks to the
-  chip over I2C and reports the field in microtesla (µT). The chip also has an
-  SPI interface, which this driver does not implement.
+  chip over I2C or over 4-wire SPI and reports the field in microtesla (µT).
+  Over SPI, the chip's PS pin needs to be tied to GND, and the driver leaves
+  the 3-wire mode off. The SPI path has not been run on a chip yet.
 
 The chip has no temperature output. It measures the resistance of its Hall
   plate instead, and the driver uses that value to correct the field readings
@@ -222,6 +223,9 @@ class Bmm150:
 
   /**
   Powers up the chip and starts continuous measurement.
+
+  The $device is an I2C device or a 4-wire SPI device. An SPI device needs mode
+    0 or 3 and a clock of at most 10 MHz (datasheet, section 6.1).
 
   Measurement runs in normal mode. The $preset sets the number of repetitions
     per measurement and a matching output data rate. Any of the PRESET
